@@ -1,0 +1,81 @@
+{
+  "name": "be-backend",
+  "version": "0.1.0",
+  "description": " Backend",
+  "main": "index.js",
+  "scripts": {
+    "test:docker-up": "docker compose -f \"tests/environment/docker-compose.yml\" up -d",
+    "test:docker-down": "docker compose -f \"tests/environment/docker-compose.yml\" down",
+    "test:migrate-to-image": "dotenv -e \"tests/environment/.env.tests\" -- npx prisma migrate deploy",
+    "test:jest-run": "dotenv -e \"tests/environment/.env.tests\" -- jest -i",
+    "test:init": "npm run test:docker-up && npm run test:migrate-to-image && npm run test:jest-run",
+    "test:finish": "npm run test:docker-down",
+    "test:restart": "npm run test:finish && npm run test:init",
+    "prisma:migrate": "npx prisma migrate dev",
+    "run:docker-up": "docker compose up -d",
+    "run:docker-down": "docker compose down",
+    "run:server": "node .",
+    "run:all": "npm run run:docker-up run:server",
+    "start": "ts-node -r tsconfig-paths/register src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BFP-Echague/backend"
+  },
+  "keywords": [
+    "bfp",
+    "fire map",
+    "backend"
+  ],
+  "author": "Azelynn Andrew Ritua",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BFP-Echague/backend/issues"
+  },
+  "homepage": "https://github.com/BFP-Echague/backend#readme",
+  "dependencies": {
+    "@absxn/process-env-parser": "^1.1.1",
+    "@jest/globals": "^29.7.0",
+    "@prisma/client": "^6.3.1",
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.14.9",
+    "@types/pdfmake": "^0.2.9",
+    "ajv": "^8.16.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "decimal.js": "^10.4.3",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "express-list-routes": "^1.2.2",
+    "express-rate-limit": "^7.3.1",
+    "express-validator": "^7.1.0",
+    "http-status-codes": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.4.4",
+    "pdfmake": "^0.2.10",
+    "pino": "^9.2.0",
+    "pino-pretty": "^11.2.1",
+    "qs": "^6.12.3",
+    "reliable-round": "^1.0.10",
+    "type-fest": "^4.21.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/luxon": "^3.4.2",
+    "globals": "^15.8.0",
+    "jest": "^29.7.0",
+    "prisma": "^6.3.1",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.15.0"
+  }
+}
