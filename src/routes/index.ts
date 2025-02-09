@@ -3,7 +3,7 @@ import { rateLimitGen, durationToMs } from "@src/middlewares";
 import * as controllers from "@src/controllers";
 
 import { baseRoute, generalRoute } from "./base";
-import { getRpNone } from "@src/middlewares/auth";
+import { getRpEditAdminOnly, getRpNone } from "@src/middlewares/auth";
 
 
 
@@ -39,3 +39,11 @@ expressClient.delete(
     }),
     controllers.userAuthDelete
 );
+
+
+const barangay = "/barangay";
+generalRoute({
+    route: barangay,
+    permissions: getRpEditAdminOnly(),
+    controllerList: controllers.barangayControllerList
+});
