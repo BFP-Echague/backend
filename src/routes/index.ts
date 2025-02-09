@@ -3,7 +3,7 @@ import { rateLimitGen, durationToMs } from "@src/middlewares";
 import * as controllers from "@src/controllers";
 
 import { baseRoute, generalRoute } from "./base";
-import { getRpEditAdminOnly, getRpNone } from "@src/middlewares/auth";
+import { getRpBasicOnly, getRpEditAdminOnly, getRpNone } from "@src/middlewares/auth";
 
 
 
@@ -46,4 +46,11 @@ generalRoute({
     route: barangay,
     permissions: getRpEditAdminOnly(),
     controllerList: controllers.barangayControllerList
+});
+
+const cause = "/cause";
+generalRoute({
+    route: cause,
+    permissions: getRpBasicOnly(),
+    controllerList: controllers.causeControllerList
 });
