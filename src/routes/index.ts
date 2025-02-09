@@ -54,3 +54,10 @@ generalRoute({
     permissions: getRpBasicOnly(),
     controllerList: controllers.causeControllerList
 });
+
+const category = "/category";
+generalRoute({
+    route: category,
+    permissions: getRpBasicOnly(),
+    controllerList: controllers.categoryControllerList
+});
