@@ -61,3 +61,10 @@ generalRoute({
     permissions: getRpBasicOnly(),
     controllerList: controllers.categoryControllerList
 });
+
+const incident = "/incident";
+generalRoute({
+    route: incident,
+    permissions: getRpBasicOnly(),
+    controllerList: controllers.incidentControllerList
+});
