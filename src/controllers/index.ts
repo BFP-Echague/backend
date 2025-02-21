@@ -4,3 +4,4 @@ export * from "./barangay";
 export * from "./cause";
 export * from "./category";
 export * from "./incident";
+export * from "./helloWorld";

@@ -3,7 +3,7 @@ import { SuccessResponse } from "@src/global/apps";
 
 
 
-export const baseControllerList: base.ControllerList = {
+export const helloWorldControllerList: base.ControllerList = {
     getMany: async function (req, validatedQuery, res) {
         new SuccessResponse(
             undefined,

@@ -10,7 +10,7 @@ import { getRpBasicOnly, getRpEditAdminOnly, getRpNone } from "@src/middlewares/
 generalRoute({
     route: "",
     permissions: getRpNone(),
-    controllerList: controllers.baseControllerList
+    controllerList: controllers.helloWorldControllerList
 });
 
 
@@ -39,6 +39,14 @@ expressClient.delete(
     }),
     controllers.userAuthDelete
 );
+
+
+const helloWorld = "/";
+generalRoute({
+    route: helloWorld,
+    permissions: getRpNone(),
+    controllerList: controllers.helloWorldControllerList
+});
 
 
 const barangay = "/barangay";
