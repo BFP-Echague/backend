@@ -56,13 +56,6 @@ generalRoute({
     controllerList: controllers.barangayControllerList
 });
 
-const cause = "/cause";
-generalRoute({
-    route: cause,
-    permissions: getRpBasicOnly(),
-    controllerList: controllers.causeControllerList
-});
-
 const category = "/category";
 generalRoute({
     route: category,
