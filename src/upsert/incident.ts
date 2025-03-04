@@ -25,7 +25,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
                     }
                 },
                 "barangayId": { type: "int32" },
-                "causeIds": { elements: { type: "int32" } },
+                "causes": { elements: { type: "string" } },
                 "structuresInvolved": { elements: { type: "string" } },
                 "categoryId": { type: "int32" }
             }, 
@@ -47,7 +47,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
                     }
                 },
                 "barangayId": { type: "int32" },
-                "causeIds": { elements: { type: "int32" } },
+                "causes": { elements: { type: "string" } },
                 "structuresInvolved": { elements: { type: "string" } },
                 "categoryId": { type: "int32" },
                 "reportTime": { type: "timestamp" },
@@ -70,9 +70,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
                 longitude: validateLocationAxis(data.location.longitude)
             } },
             barangay: { connect: { id: data.barangayId } },
-            causeIncidentJunc: { create: data.causeIds.map((causeId) => ({
-                cause: { connect: { id: causeId } }
-            })) },
+            causes: data.causes,
             responseTime: data.responseTime,
             fireOutTime: data.fireOutTime,
             structuresInvolved: data.structuresInvolved,
@@ -90,12 +88,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
                 longitude: data.location.longitude ? validateLocationAxis(data.location.longitude) : undefined
             } }) : undefined,
             barangay: { update: { id: data.barangayId } },
-            causeIncidentJunc: data.causeIds ? {
-                deleteMany: {},
-                createMany: {
-                    data: data.causeIds.map((causeId) => ({ causeId: causeId  }))
-                }
-            } : undefined,
+            causes: data.causes,
             responseTime: data.responseTime,
             fireOutTime: data.fireOutTime,
             structuresInvolved: data.structuresInvolved,
