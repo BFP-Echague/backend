@@ -1,6 +1,6 @@
 import { ErrorResponse } from "@src/global/apps";
 import { RequestHandler } from "express";
-import { IdParams } from "@dbm/interfaces";
+import { IdParams } from "@dbm";
 
 
 

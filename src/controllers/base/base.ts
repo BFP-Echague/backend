@@ -1,6 +1,5 @@
-import { DeepPartial } from "@dbm/base";
 import { UpsertUtils } from "@src/upsert/base";
-import { BlankObject, IdParams, PagedResult } from "@dbm/interfaces";
+import { DeepPartial, BlankObject, IdParams, PagedResult } from "@dbm";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ErrorResponse, SuccessResponse } from "@src/global/apps";
 import { Request, RequestHandler, Response } from "express";

@@ -1,9 +1,7 @@
-import { BarangayUpsert } from "@dbm/barangay";
+import { BarangayUpsert, DeepPartial, IdParams, BlankObject } from "@dbm";
 import { CreateSchema, UpsertUtils } from "./base";
-import { IdParams, BlankObject } from "@dbm/interfaces";
 import { Prisma } from "@prisma/client";
 import { Request } from "express";
-import { DeepPartial } from "@dbm/base";
 import { z } from "zod";
 
 

@@ -4,9 +4,8 @@ import { RequestHandler, Request } from "express";
 import { Prisma, PrivilegeLevel } from "@prisma/client";
 import { ErrorResponse, prismaClient, env } from "@src/global/apps";
 import crypto from "crypto";
-import { LoginData } from "@dbm/auth";
+import { LoginData, userSelect } from "@dbm";
 import { getBlankHandler } from "@src/routes/base";
-import { userSelect } from "@dbm/user";
 
 
 

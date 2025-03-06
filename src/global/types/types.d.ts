@@ -1,4 +1,4 @@
-import { userInclude } from "@dbm/user";
+import { userInclude } from "@dbm";
 import { Prisma } from "@prisma/client";
 
 declare global {

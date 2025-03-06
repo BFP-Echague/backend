@@ -1,8 +1,7 @@
 import { prismaClient } from "@src/global/apps";
 import * as base from "./base";
-import { incidentInclude, incidentOrderBy } from "@dbm/incident";
+import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
-import { searchAlg } from "@dbm/base";
 import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams } from "./base";
 
 

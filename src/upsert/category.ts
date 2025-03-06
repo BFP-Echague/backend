@@ -1,6 +1,4 @@
-import { DeepPartial } from "@dbm/base";
-import { CategoryUpsert } from "@dbm/category";
-import { IdParams, BlankObject } from "@dbm/interfaces";
+import { DeepPartial, CategoryUpsert, IdParams, BlankObject } from "@dbm";
 import { Prisma } from "@prisma/client";
 import { CreateSchema, UpsertUtils } from "./base";
 import { Request } from "express";

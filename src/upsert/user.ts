@@ -1,6 +1,4 @@
-import { DeepPartial } from "@dbm/base";
-import { IdParams, BlankObject } from "@dbm/interfaces";
-import { UserUpsert } from "@dbm/user";
+import { DeepPartial, IdParams, BlankObject, UserUpsert } from "@dbm";
 import { Prisma, PrivilegeLevel } from "@prisma/client";
 import { CreateSchema, UpsertUtils } from "./base";
 import { Request } from "express";

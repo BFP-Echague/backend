@@ -1,4 +1,4 @@
-import { IdParams } from "@dbm/interfaces";
+import { IdParams } from "@dbm";
 import { ControllerList, QPController } from "@src/controllers/base/base";
 import { ErrorResponse, expressClient } from "@src/global/apps";
 import { getDeleteLightRateLimit, getGetLightRateLimit, getPatchExpensiveRateLimit, getPostExpensiveRateLimit, idParams } from "@src/middlewares";

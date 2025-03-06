@@ -1,7 +1,6 @@
 import { prismaClient } from "@src/global/apps";
 import * as base from "./base";
-import { barangayInclude, barangayOrderBy } from "@dbm/barangay";
-import { searchAlg } from "@dbm/base";
+import { searchAlg, barangayInclude, barangayOrderBy } from "@dbm";
 import { BarangayUpsertUtils } from "@src/upsert";
 import { createSearchNameQueryParam, SearchNameQueryParam } from "./base";
 
