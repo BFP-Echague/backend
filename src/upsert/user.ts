@@ -1,10 +1,10 @@
 import { DeepPartial } from "@dbm/base";
 import { IdParams, BlankObject } from "@dbm/interfaces";
 import { UserUpsert } from "@dbm/user";
-import { Prisma } from "@prisma/client";
-import { JTDSchemaType } from "ajv/dist/core";
-import { UpsertUtils } from "./base";
+import { Prisma, PrivilegeLevel } from "@prisma/client";
+import { CreateSchema, UpsertUtils } from "./base";
 import { Request } from "express";
+import { z } from "zod";
 
 export class UserUpsertUtils extends UpsertUtils<
     UserUpsert, Prisma.UserCreateInput, Prisma.UserUpdateInput,
@@ -13,25 +13,12 @@ export class UserUpsertUtils extends UpsertUtils<
     public static inst = new UserUpsertUtils();
 
     public constructor() {
-        const createJTD: JTDSchemaType<UserUpsert> = {
-            properties: {
-                "username": { type: "string" },
-                "email": { type: "string" },
-                "password": { type: "string" },
-                "privilege": { enum: ["ADMIN", "BASIC"] }
-            }
-        };
-
-        const updateJTD: JTDSchemaType<DeepPartial<UserUpsert>> = {
-            optionalProperties: {
-                "username": { type: "string" },
-                "email": { type: "string" },
-                "password": { type: "string" },
-                "privilege": { enum: ["ADMIN", "BASIC"] }
-            }
-        };
-
-        super(createJTD, updateJTD);
+        super(z.object({
+            username: z.string(),
+            email: z.string(),
+            password: z.string(),
+            privilege: z.nativeEnum(PrivilegeLevel)
+        }) satisfies CreateSchema<UserUpsert>);
     }
 
 

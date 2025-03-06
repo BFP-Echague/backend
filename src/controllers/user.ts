@@ -1,15 +1,13 @@
-import { JTDSchemaType } from "ajv/dist/core";
-
-import { searchAlg } from "@dbm/base";
+import { searchAlg, userOrderBy, userSelect, LoginData } from "@dbm";
 import { SimpleRequestHandler } from "@src/upsert";
-import { userOrderBy, userSelect } from "@dbm/user";
 import { UserUpsertUtils } from "@src/upsert";
 import { PrivilegeLevel } from "@prisma/client";
-import { ajvClient, ErrorResponse, logger, prismaClient, SuccessResponse } from "@src/global/apps";
+import { ErrorResponse, logger, prismaClient, SuccessResponse } from "@src/global/apps";
 import bcrypt from "bcrypt";
 import { authenticateUser, cookieSessionKey, getMustBeAdmin, getMustBeBasic, getSessionIdFromCookie, isPrivilegeMet, logoutSession, RoutePermissions, unauthorizedError, validateUser } from "../middlewares/auth";
 import * as base from "./base";
 import { createSearchNameQueryParam, SearchNameQueryParam } from "./base";
+import { z } from "zod";
 
 
 
@@ -141,24 +139,17 @@ export const userControllerList: base.ControllerList<SearchNameQueryParam> = {
 
 
 
-interface UserAuthGet {
-    username: string;
-    password: string;
-}
-const userAuthGetValidator = ajvClient.compile(
-    {
-        properties: {
-            "username": { type: "string" },
-            "password": { type: "string" }
-        },
-    } as JTDSchemaType<UserAuthGet>
-);
+const userAuthSchema: z.ZodType<LoginData> = z.object({
+    username: z.string(),
+    password: z.string()
+});
 export const userAuthPost: SimpleRequestHandler = async function (req, res) {
-    if (!userAuthGetValidator(req.body)) {
-        throw ErrorResponse.fromValidatorErrors(userAuthGetValidator.errors);
+    const parseResult = userAuthSchema.safeParse(req.body);
+    if (!parseResult.success) {
+        throw ErrorResponse.fromParseErrors(parseResult.error);
     }
 
-    const result = await authenticateUser(req.body);
+    const result = await authenticateUser(parseResult.data);
 
     res.cookie(cookieSessionKey, result.sessionInfo.sessionId, {
         maxAge: result.sessionInfo.expiresOn.getTime() - Date.now(),

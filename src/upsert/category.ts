@@ -2,9 +2,9 @@ import { DeepPartial } from "@dbm/base";
 import { CategoryUpsert } from "@dbm/category";
 import { IdParams, BlankObject } from "@dbm/interfaces";
 import { Prisma } from "@prisma/client";
-import { JTDSchemaType } from "ajv/dist/core";
-import { UpsertUtils } from "./base";
+import { CreateSchema, UpsertUtils } from "./base";
 import { Request } from "express";
+import { z } from "zod";
 
 
 
@@ -15,21 +15,10 @@ export class CategoryUpsertUtils extends UpsertUtils<
     public static inst = new CategoryUpsertUtils();
 
     public constructor() {
-        const createJTD: JTDSchemaType<CategoryUpsert> = {
-            properties: {
-                "name": { type: "string" },
-                "severity": { type: "int32" }
-            }
-        };
-
-        const updateJTD: JTDSchemaType<DeepPartial<CategoryUpsert>> = {
-            optionalProperties: {
-                "name": { type: "string" },
-                "severity": { type: "int32" }
-            }
-        };
-
-        super(createJTD, updateJTD);
+        super(z.object({
+            name: z.string(),
+            severity: z.number().int()
+        }) satisfies CreateSchema<CategoryUpsert>);
     }
 
 

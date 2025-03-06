@@ -2,7 +2,7 @@ import { DeepPartial } from "@dbm/base";
 import { UpsertUtils } from "@src/upsert/base";
 import { BlankObject, IdParams, PagedResult } from "@dbm/interfaces";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { ajvClient, ErrorResponse, SuccessResponse } from "@src/global/apps";
+import { ErrorResponse, SuccessResponse } from "@src/global/apps";
 import { Request, RequestHandler, Response } from "express";
 import { ValidationChain } from "express-validator";
 import { StatusCodes } from "http-status-codes";
@@ -154,13 +154,13 @@ export function generalPutMany<
     schemaUpsertUtils: UpsertUtils<Interface, PrismaCreateInputType, PrismaUpdateInputType, UpdateParams, PostParams>,
     putManyFunc: (req: Request<Params, ResBody, ReqBody, QueryParams>, validatedQuery: ValidatedQs, body: Interface[]) => Promise<Result[]>
 ): QPController<Params, ResBody, ReqBody, QueryParams, ValidatedQs> {
-    const validator = ajvClient.compile(schemaUpsertUtils.putManyJTD);
     return async function (req, validatedQuery, res) {
-        if (!validator(req.body)) {
-            throw ErrorResponse.fromValidatorErrors(validator.errors);
+        const parseResult = await schemaUpsertUtils.putManySchema.safeParseAsync(req.body);
+        if (!parseResult.success) {
+            throw ErrorResponse.fromParseErrors(parseResult.error);
         }
 
-        const result = await catchUpsertPromise(putManyFunc(req, validatedQuery, req.body));
+        const result = await catchUpsertPromise(putManyFunc(req, validatedQuery, parseResult.data));
         new SuccessResponse(result).sendResponse(res);
     };
 }
@@ -177,13 +177,13 @@ export function generalPost<
     schemaUpsertUtils: UpsertUtils<Interface, PrismaCreateInputType, PrismaUpdateInputType, UpdateParams, PostParams>,
     createFunc: (req: Request<Params, ResBody, ReqBody, QueryParams>, body: Interface) => Promise<Result>
 ): RequestHandler<Params, ResBody, ReqBody, QueryParams> {
-    const validator = ajvClient.compile(schemaUpsertUtils.createJTD);
     return async function (req, res) {
-        if (!validator(req.body)) {
-            throw ErrorResponse.fromValidatorErrors(validator.errors);
+        const parseResult = await schemaUpsertUtils.createSchema.safeParseAsync(req.body);
+        if (!parseResult.success) {
+            throw ErrorResponse.fromParseErrors(parseResult.error);
         }
 
-        const result = await catchUpsertPromise(createFunc(req, req.body));
+        const result = await catchUpsertPromise(createFunc(req, parseResult.data));
         new SuccessResponse(result).sendResponse(res);
     };
 }
@@ -200,13 +200,13 @@ export function generalPatch<
     schemaUpsertUtils: UpsertUtils<Interface, PrismaCreateInputType, PrismaUpdateInputType, UpdateParams, PostParams>,
     patchFunc: (req: Request<Params, ResBody, ReqBody, QueryParams>, body: DeepPartial<Interface>) => Promise<Result>
 ): RequestHandler<Params, ResBody, ReqBody, QueryParams> {
-    const validator = ajvClient.compile(schemaUpsertUtils.updateJTD);
     return async function (req, res) {
-        if (!validator(req.body)) {
-            throw ErrorResponse.fromValidatorErrors(validator.errors);
+        const parseResult = await schemaUpsertUtils.updateSchema.safeParseAsync(req.body);
+        if (!parseResult.success) {
+            throw ErrorResponse.fromParseErrors(parseResult.error);
         }
 
-        const result = await catchUpsertPromise(patchFunc(req, req.body));
+        const result = await catchUpsertPromise(patchFunc(req, parseResult.data));
         new SuccessResponse(result).sendResponse(res);
     };
 }

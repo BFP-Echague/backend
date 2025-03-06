@@ -1,10 +1,10 @@
 import { BarangayUpsert } from "@dbm/barangay";
-import { UpsertUtils } from "./base";
+import { CreateSchema, UpsertUtils } from "./base";
 import { IdParams, BlankObject } from "@dbm/interfaces";
 import { Prisma } from "@prisma/client";
-import { JTDSchemaType } from "ajv/dist/core";
 import { Request } from "express";
 import { DeepPartial } from "@dbm/base";
+import { z } from "zod";
 
 
 export class BarangayUpsertUtils extends UpsertUtils<
@@ -14,19 +14,9 @@ export class BarangayUpsertUtils extends UpsertUtils<
     public static inst = new BarangayUpsertUtils();
 
     public constructor() {
-        const createJTD: JTDSchemaType<BarangayUpsert> = {
-            properties: {
-                "name": { type: "string" }
-            }
-        };
-
-        const updateJTD: JTDSchemaType<DeepPartial<BarangayUpsert>> = {
-            optionalProperties: {
-                "name": { type: "string" }
-            }
-        };
-
-        super(createJTD, updateJTD);
+        super(z.object({
+            name: z.string()
+        }) satisfies CreateSchema<BarangayUpsert>);
     }
 
 

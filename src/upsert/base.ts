@@ -1,32 +1,34 @@
-import { DeepPartial } from "@dbm/base";
-import { BlankObject } from "@dbm/interfaces";
-import { JTDSchemaType } from "ajv/dist/core";
+import { BlankObject, RawJSON, DeepPartial } from "@dbm";
+import { z } from "zod";
 import { Request, RequestHandler } from "express";
 
 
 export type SimpleRequestHandler = RequestHandler<unknown, unknown, unknown, unknown>
 export type PassedRequest = Parameters<SimpleRequestHandler>[0]
 
+export type CreateSchema<Upsert extends object> = z.ZodType<Upsert, z.ZodTypeDef, RawJSON<Upsert>>;
+export type UpdateSchema<Upsert extends object> = z.ZodType<DeepPartial<Upsert>, z.ZodTypeDef, DeepPartial<RawJSON<Upsert>>>;
+export type PutManySchema<Upsert extends object> = z.ZodType<Upsert[], z.ZodTypeDef, RawJSON<Upsert[]>>;
+
 export abstract class UpsertUtils<
-    Interface extends object,
+    Upsert extends object,
     PrismaCreateInputType, PrismaUpdateInputType,
     UpdateParams = BlankObject, PostParams = BlankObject
 > {
-    public putManyJTD: JTDSchemaType<Interface[]>;
+    public putManySchema: PutManySchema<Upsert>;
+    public updateSchema: UpdateSchema<Upsert>;
 
     public constructor(
-        public createJTD: JTDSchemaType<Interface>,
-        public updateJTD: JTDSchemaType<DeepPartial<Interface>>
+        public createSchema: CreateSchema<Upsert>,
     ) {
-        this.putManyJTD = {
-            elements: createJTD
-        } as JTDSchemaType<Interface[]>;
+        this.putManySchema = createSchema.array();
+        this.updateSchema = (createSchema as unknown as z.ZodObject<z.ZodRawShape>).partial() as unknown as UpdateSchema<Upsert>;
     }
 
-    public abstract getCreateQuery(req: Request<PostParams, BlankObject, BlankObject, BlankObject>, data: Interface): PrismaCreateInputType;
-    public abstract getUpdateQuery(req: Request<UpdateParams, BlankObject, BlankObject, BlankObject>, data: DeepPartial<Interface>): PrismaUpdateInputType;
+    public abstract getCreateQuery(req: Request<PostParams, BlankObject, BlankObject, BlankObject>, data: Upsert): PrismaCreateInputType;
+    public abstract getUpdateQuery(req: Request<UpdateParams, BlankObject, BlankObject, BlankObject>, data: DeepPartial<Upsert>): PrismaUpdateInputType;
 
-    public getCreateManyQuery(req: Request<PostParams, BlankObject, BlankObject, BlankObject>, data: Interface[]) {
+    public getCreateManyQuery(req: Request<PostParams, BlankObject, BlankObject, BlankObject>, data: Upsert[]) {
         return data.map(item => this.getCreateQuery(req, item));
     }
 }

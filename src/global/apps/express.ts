@@ -5,12 +5,12 @@ import bodyParser from "body-parser";
 
 import { StatusCodes } from "http-status-codes";
 import { Prisma } from "@prisma/client";
-import { ValidateFunction } from "ajv/dist/types";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import { logger } from "./pino";
 import { env } from "./env";
+import { z } from "zod";
 
 
 
@@ -34,11 +34,11 @@ export class ErrorResponse {
         public statusCode: number = StatusCodes.BAD_REQUEST
     ) {}
 
-    static fromValidatorErrors(validatorErrors: ValidateFunction["errors"]) {
+    public static fromParseErrors(zodError: z.ZodError) {
         return new ErrorResponse(
             "invalidJSONFormat",
             "Your JSON is not formatted correctly.",
-            validatorErrors
+            zodError.errors
         );
     }
 

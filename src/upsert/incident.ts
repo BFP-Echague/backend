@@ -1,10 +1,9 @@
-import { DeepPartial } from "@dbm/base";
-import { IncidentUpsert, validateLocationAxis } from "@dbm/incident";
-import { IdParams, BlankObject } from "@dbm/interfaces";
+import { DeepPartial, IncidentUpsert, IdParams, BlankObject, zodDecimal, zodId, zodDate } from "@dbm";
 import { Prisma } from "@prisma/client";
-import { JTDSchemaType } from "ajv/dist/core";
-import { UpsertUtils } from "./base";
+import { CreateSchema, UpsertUtils } from "./base";
 import { Request } from "express";
+import Decimal from "decimal.js";
+import { z } from "zod";
 
 
 
@@ -15,49 +14,21 @@ export class IncidentUpsertUtils extends UpsertUtils<
     public static inst = new IncidentUpsertUtils();
 
     public constructor() {
-        const createJTD: JTDSchemaType<IncidentUpsert> = {
-            properties: {
-                "name": { type: "string" },
-                "location": {
-                    properties: {
-                        "longitude": { type: "string" },
-                        "latitude": { type: "string" }
-                    }
-                },
-                "barangayId": { type: "int32" },
-                "causes": { elements: { type: "string" } },
-                "structuresInvolved": { elements: { type: "string" } },
-                "categoryId": { type: "int32" }
-            }, 
-            optionalProperties: {
-                "reportTime": { type: "timestamp" },
-                "responseTime": { type: "timestamp" },
-                "fireOutTime": { type: "timestamp" },
-                "notes": { type: "string" }
-            }
-        };
-
-        const updateJTD: JTDSchemaType<DeepPartial<IncidentUpsert>> = {
-            optionalProperties: {
-                "name": { type: "string" },
-                "location": {
-                    optionalProperties: {
-                        "longitude": { type: "string" },
-                        "latitude": { type: "string" }
-                    }
-                },
-                "barangayId": { type: "int32" },
-                "causes": { elements: { type: "string" } },
-                "structuresInvolved": { elements: { type: "string" } },
-                "categoryId": { type: "int32" },
-                "reportTime": { type: "timestamp" },
-                "responseTime": { type: "timestamp" },
-                "fireOutTime": { type: "timestamp" },
-                "notes": { type: "string" }
-            }
-        };
-
-        super(createJTD, updateJTD);
+        super(z.object({
+            name: z.string(),
+            location: z.object({
+                latitude: zodDecimal,
+                longitude: zodDecimal
+            }),
+            barangayId: zodId,
+            causes: z.string().array(),
+            structuresInvolved: z.string().array(),
+            categoryId: zodId,
+            reportTime: zodDate.optional(),
+            responseTime: zodDate.optional(),
+            fireOutTime: zodDate.optional(),
+            notes: z.string().optional()
+        }) satisfies CreateSchema<IncidentUpsert>);
     }
 
 
@@ -66,8 +37,8 @@ export class IncidentUpsertUtils extends UpsertUtils<
             name: data.name,
             reportTime: data.reportTime,
             location: { create: {
-                latitude: validateLocationAxis(data.location.latitude),
-                longitude: validateLocationAxis(data.location.longitude)
+                latitude: data.location.latitude,
+                longitude: data.location.longitude
             } },
             barangay: { connect: { id: data.barangayId } },
             causes: data.causes,
@@ -84,8 +55,8 @@ export class IncidentUpsertUtils extends UpsertUtils<
             name: data.name,
             reportTime: data.reportTime,
             location: data.location ? ({ update: {
-                latitude: data.location.latitude ? validateLocationAxis(data.location.latitude) : undefined,
-                longitude: data.location.longitude ? validateLocationAxis(data.location.longitude) : undefined
+                latitude: data.location.latitude as Decimal | undefined,
+                longitude: data.location.longitude as Decimal | undefined
             } }) : undefined,
             barangay: { update: { id: data.barangayId } },
             causes: data.causes,
