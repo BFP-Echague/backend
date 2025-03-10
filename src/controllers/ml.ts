@@ -1,72 +1,9 @@
-import { z } from "zod";
 import * as base from "./base";
 import { env, ErrorResponse, prismaClient, SuccessResponse } from "@src/global/apps";
-import { Prisma } from "@prisma/client";
 import { incidentInclude, incidentOrderBy } from "@dbm/incident";
 import axios from "axios";
+import { clusteringSettingsSchema, feature_count, ClusteringRequest, clusteringResponseSchema, FinalResult } from "@dbm/ml";
 
-
-
-interface ClusteringSettings {
-    componentCount: number | null;
-    clusterCountStart: number;
-    clusterCountEnd: number | null;
-}
-
-const clusteringSettingsSchema: z.ZodType<ClusteringSettings> = z.object({
-    componentCount: z.number().nullable(),
-    clusterCountStart: z.number(),
-    clusterCountEnd: z.number()
-});
-
-
-
-const feature_count = 2;
-interface IncidentClusteringData {
-    id: number;
-    locationLatitude: number;
-    locationLongitude: number;
-}
-
-interface ClusteringRequest {
-    settings: ClusteringSettings;
-    data: IncidentClusteringData[];
-}
-
-
-
-interface ClusterResult {
-    clusterCount: number;
-    labels: number[][];
-    score: number;
-}
-
-const clusterResultSchema: z.ZodType<ClusterResult> = z.object({
-    clusterCount: z.number(),
-    labels: z.array(z.array(z.number())),
-    score: z.number()
-});
-
-interface ClusteringResponse {
-    clusterResults: ClusterResult[];
-    optimalClusterCount: number;
-}
-
-const clusteringResponseSchema: z.ZodType<ClusteringResponse> = z.object({
-    clusterResults: z.array(clusterResultSchema),
-    optimalClusterCount: z.number()
-});
-
-
-interface FinalResult {
-    incidents: Prisma.IncidentGetPayload<{ include: typeof incidentInclude }>[];
-    clusterResults: {
-        clusterCount: number;
-        labels: number[][];
-        score: number;
-    }[];
-    optimalClusterCount: number;
-}
 
 
 export const clusteringControllerList: base.ControllerList = {
