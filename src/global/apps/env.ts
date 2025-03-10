@@ -7,6 +7,7 @@ const result = parseEnvironmentVariables({
         default: 7510
     },
     HOST: { default: "localhost" },
+    ML_SERVER_URL: {},
     DATABASE_URL: {},
     SESSION_SECRET: {},
     SESSION_LENGTH_HOURS: { 

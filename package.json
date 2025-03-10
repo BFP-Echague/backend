@@ -40,6 +40,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.14.9",
     "@types/pdfmake": "^0.2.9",
+    "axios": "^1.8.2",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",

@@ -69,3 +69,10 @@ generalRoute({
     permissions: getRpBasicOnly(),
     controllerList: controllers.incidentControllerList
 });
+
+const cluster = "/cluster";
+generalRoute({
+    route: cluster,
+    permissions: getRpBasicOnly(),
+    controllerList: controllers.clusteringControllerList
+});
