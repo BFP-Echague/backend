@@ -26,17 +26,13 @@ const userAuth = baseRoute + "/login";
 expressClient.post(
     userAuth,
     rateLimitGen({
-        windowMs: durationToMs({ seconds: 30 }),
+        windowMs: durationToMs({ seconds: 60 }),
         limit: 5
     }),
     controllers.userAuthPost
 );
 expressClient.delete(
     userAuth,
-    rateLimitGen({
-        windowMs: durationToMs({ seconds: 30 }),
-        limit: 5
-    }),
     controllers.userAuthDelete
 );
 
