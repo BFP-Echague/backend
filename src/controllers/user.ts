@@ -190,7 +190,7 @@ export async function ensureAdmin() {
     const data = {
         username: "admin",
         email: "admin@gmail.com",
-        passwordHash: "adminadmin123",
+        passwordHash: "adminAdmin123#",
         privilege: PrivilegeLevel.ADMIN
     };
 
