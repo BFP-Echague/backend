@@ -27,7 +27,8 @@ export class IncidentUpsertUtils extends UpsertUtils<
             reportTime: zodDate.optional(),
             responseTime: zodDate.optional(),
             fireOutTime: zodDate.optional(),
-            notes: z.string().optional()
+            notes: z.string().optional(),
+            archived: z.boolean().optional()
         }) satisfies CreateSchema<IncidentUpsert>);
     }
 
@@ -46,7 +47,8 @@ export class IncidentUpsertUtils extends UpsertUtils<
             fireOutTime: data.fireOutTime,
             structuresInvolved: data.structuresInvolved,
             notes: data.notes,
-            category: { connect: { id: data.categoryId } }
+            category: { connect: { id: data.categoryId } },
+            archived: data.archived
         };
     }
 
@@ -64,7 +66,8 @@ export class IncidentUpsertUtils extends UpsertUtils<
             fireOutTime: data.fireOutTime,
             structuresInvolved: data.structuresInvolved,
             notes: data.notes,
-            category: data.categoryId ? { connect: { id: data.categoryId } } : undefined
+            category: data.categoryId ? { connect: { id: data.categoryId } } : undefined,
+            archived: data.archived
         };
     }
 }
