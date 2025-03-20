@@ -1,17 +1,19 @@
-import { prismaClient } from "@src/global/apps";
+import { ErrorResponse, prismaClient } from "@src/global/apps";
 import * as base from "./base";
 import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
-import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams } from "./base";
+import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams, createIncludeArchivedQueryParam, IncludeArchivedQueryParams } from "./base";
 
 
 export const incidentControllerList: base.ControllerList<
     SearchNameQueryParam &
-    PageQueryParams
+    PageQueryParams &
+    IncludeArchivedQueryParams
 > = {
     queryParams: [
         createSearchNameQueryParam(),
-        createPageQueryParams()
+        createPageQueryParams(),
+        createIncludeArchivedQueryParam()
     ],
 
 
@@ -32,7 +34,10 @@ export const incidentControllerList: base.ControllerList<
                 skip: validatedQuery.cursorId ? 1 : 0,
                 take: take,
 
-                where: { name: validatedQuery.search ? searchAlg(validatedQuery.search) : undefined },
+                where: {
+                    name: validatedQuery.search ? searchAlg(validatedQuery.search) : undefined,
+                    archived: validatedQuery.includeArchived === true ? undefined : false
+                },
                 include: incidentInclude,
                 orderBy: incidentOrderBy,
             });
@@ -65,10 +70,10 @@ export const incidentControllerList: base.ControllerList<
         })
     ),
 
-    delete: base.generalDelete(
-        async (req) => await prismaClient.incident.delete({
-            where: { id: req.id },
-            include: incidentInclude
-        })
-    )
+    delete: async () => {
+        throw new ErrorResponse(
+            "cannotDeleteIncident",
+            "You cannot delete incidents, only archive them. You can instead send a PATCH request with {'archived': true}."
+        );
+    }
 };
