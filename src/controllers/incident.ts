@@ -3,17 +3,35 @@ import * as base from "./base";
 import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
 import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams, createIncludeArchivedQueryParam, IncludeArchivedQueryParams } from "./base";
+import { query } from "express-validator";
+
+
+
+function createSortByQueryParam() {
+    return query("sortBy").optional().isIn(["name", "reportTime", "barangay", "responseTime", "fireOutTime", "notes", "category", "archived"]);
+}
+function createSortAscQueryParam() {
+    return query("sortAsc").optional().isBoolean().toBoolean();
+}
+interface SortByQueryParams {
+    sortBy?: "name" | "reportTime" | "barangay" | "responseTime" | "fireOutTime" | "notes" | "category" | "archived";
+    sortAsc?: boolean;
+}
+
+function toSortStr(sortAsc: boolean) {
+    return sortAsc ? "asc" : "desc";
+}
 
 
 export const incidentControllerList: base.ControllerList<
     SearchNameQueryParam &
     PageQueryParams &
-    IncludeArchivedQueryParams
+    IncludeArchivedQueryParams & SortByQueryParams
 > = {
     queryParams: [
         createSearchNameQueryParam(),
         createPageQueryParams(),
-        createIncludeArchivedQueryParam()
+        createIncludeArchivedQueryParam(), createSortByQueryParam(), createSortAscQueryParam()
     ],
 
 
@@ -29,6 +47,9 @@ export const incidentControllerList: base.ControllerList<
         async (req, validatedQuery) => {
             const take = validatedQuery.pageSize ?? 10;
 
+
+            const sortAsc = validatedQuery.sortAsc === undefined ? false : validatedQuery.sortAsc;
+
             const result = await prismaClient.incident.findMany({
                 cursor: validatedQuery.cursorId ? { id: validatedQuery.cursorId } : undefined,
                 skip: validatedQuery.cursorId ? 1 : 0,
@@ -39,7 +60,17 @@ export const incidentControllerList: base.ControllerList<
                     archived: validatedQuery.includeArchived === true ? undefined : false
                 },
                 include: incidentInclude,
-                orderBy: incidentOrderBy,
+                orderBy: validatedQuery.sortBy === undefined ? incidentOrderBy : (
+                    validatedQuery.sortBy === "archived" ? { archived: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "name" ? { name: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "reportTime" ? { reportTime: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "responseTime" ? { responseTime: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "fireOutTime" ? { fireOutTime: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "barangay" ? { barangay: { name: toSortStr(sortAsc) } }
+                    : validatedQuery.sortBy === "category" ? { category: { severity: toSortStr(sortAsc) } }
+                    : validatedQuery.sortBy === "notes" ? { notes: toSortStr(sortAsc) }
+                    : undefined
+                ),
             });
 
             return {
