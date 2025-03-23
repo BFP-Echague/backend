@@ -4,6 +4,8 @@ import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
 import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams, createIncludeArchivedQueryParam, IncludeArchivedQueryParams } from "./base";
 import { query } from "express-validator";
+import { getSessionById, getSessionIdFromCookie } from "@src/middlewares";
+import { Request } from "express";
 
 
 
@@ -20,6 +22,14 @@ interface SortByQueryParams {
 
 function toSortStr(sortAsc: boolean) {
     return sortAsc ? "asc" : "desc";
+}
+
+
+async function getUserFromRequest<Params, ResBody, ReqBody, QueryParams>(req: Request<Params, ResBody, ReqBody, QueryParams>) {
+    const uploadingUser = await getSessionById(getSessionIdFromCookie(req));
+    if (uploadingUser === null)
+        throw new ErrorResponse("invalidSession", "The session ID in the cookie is invalid.");
+    return uploadingUser;
 }
 
 
@@ -86,19 +96,34 @@ export const incidentControllerList: base.ControllerList<
 
     post: base.generalPost(
         IncidentUpsertUtils.inst,
-        async (req, body) => await prismaClient.incident.create({
-            data: IncidentUpsertUtils.inst.getCreateQuery(req, body),
-            include: incidentInclude
-        })
+        async (req, body) => {
+            const uploadingUser = await getUserFromRequest(req);
+
+            return await prismaClient.incident.create({
+                data: {
+                    ...IncidentUpsertUtils.inst.getCreateQuery(req, body),
+                    createdBy: { connect: { id: uploadingUser.user.id } },
+                    updatedBy: { connect: { id: uploadingUser.user.id } }
+                },
+                include: incidentInclude
+            });
+        }
     ),
 
     patch: base.generalPatch(
         IncidentUpsertUtils.inst,
-        async (req, body) => await prismaClient.incident.update({
-            where: { id: req.id },
-            data: IncidentUpsertUtils.inst.getUpdateQuery(req, body),
-            include: incidentInclude
-        })
+        async (req, body) => {
+            const uploadingUser = await getUserFromRequest(req);
+
+            return await prismaClient.incident.update({
+                where: { id: req.id },
+                data: {
+                    ...IncidentUpsertUtils.inst.getUpdateQuery(req, body),
+                    updatedBy: { connect: { id: uploadingUser.user.id } }
+                },
+                include: incidentInclude
+            });
+        }
     ),
 
     delete: async () => {
