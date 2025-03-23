@@ -7,8 +7,15 @@ import { z } from "zod";
 
 
 
+export type LogFields = "createdBy" | "updatedBy";
+export type IncidentCreateInputWithoutLogs = Omit<Prisma.IncidentCreateInput, LogFields>;
+export type IncidentUpdateInputWithoutLogs = Omit<Prisma.IncidentUpdateInput, LogFields>;
+
+
+
 export class IncidentUpsertUtils extends UpsertUtils<
-    IncidentUpsert, Prisma.IncidentCreateInput, Prisma.IncidentUpdateInput,
+    IncidentUpsert,
+    IncidentCreateInputWithoutLogs, IncidentUpdateInputWithoutLogs,
     IdParams
 > {
     public static inst = new IncidentUpsertUtils();
@@ -33,7 +40,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
     }
 
 
-    public override getCreateQuery(req: Request<BlankObject, BlankObject, BlankObject, BlankObject>, data: IncidentUpsert): Prisma.IncidentCreateInput {       
+    public override getCreateQuery(req: Request<BlankObject, BlankObject, BlankObject, BlankObject>, data: IncidentUpsert): IncidentCreateInputWithoutLogs {       
         return {
             name: data.name,
             reportTime: data.reportTime,
@@ -52,7 +59,7 @@ export class IncidentUpsertUtils extends UpsertUtils<
         };
     }
 
-    public override getUpdateQuery(req: Request<IdParams, BlankObject, BlankObject, BlankObject>, data: DeepPartial<IncidentUpsert>): Prisma.IncidentUpdateInput {
+    public override getUpdateQuery(req: Request<IdParams, BlankObject, BlankObject, BlankObject>, data: DeepPartial<IncidentUpsert>): IncidentUpdateInputWithoutLogs {
         return {
             name: data.name,
             reportTime: data.reportTime,
