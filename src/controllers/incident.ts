@@ -10,13 +10,13 @@ import { Request } from "express";
 
 
 function createSortByQueryParam() {
-    return query("sortBy").optional().isIn(["name", "reportTime", "barangay", "responseTime", "fireOutTime", "notes", "category", "archived"]);
+    return query("sortBy").optional().isIn(["name", "reportTime", "barangay", "responseTime", "fireOutTime", "notes", "category", "archived", "createdBy", "updatedBy"]);
 }
 function createSortAscQueryParam() {
     return query("sortAsc").optional().isBoolean().toBoolean();
 }
 interface SortByQueryParams {
-    sortBy?: "name" | "reportTime" | "barangay" | "responseTime" | "fireOutTime" | "notes" | "category" | "archived";
+    sortBy?: "name" | "reportTime" | "barangay" | "responseTime" | "fireOutTime" | "notes" | "category" | "archived" | "createdBy" | "updatedBy";
     sortAsc?: boolean;
 }
 
@@ -79,6 +79,8 @@ export const incidentControllerList: base.ControllerList<
                     : validatedQuery.sortBy === "barangay" ? { barangay: { name: toSortStr(sortAsc) } }
                     : validatedQuery.sortBy === "category" ? { category: { severity: toSortStr(sortAsc) } }
                     : validatedQuery.sortBy === "notes" ? { notes: toSortStr(sortAsc) }
+                    : validatedQuery.sortBy === "createdBy" ? { createdBy: { username: toSortStr(sortAsc) } }
+                    : validatedQuery.sortBy === "updatedBy" ? { updatedBy: { username: toSortStr(sortAsc) } }
                     : undefined
                 ),
             });
