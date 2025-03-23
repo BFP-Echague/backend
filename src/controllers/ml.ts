@@ -37,6 +37,9 @@ export const clusteringControllerList: base.ControllerList = {
 
 
         const data = await prismaClient.incident.findMany({
+            where: {
+                archived: false
+            },
             include: incidentInclude,
             orderBy: incidentOrderBy,
         });
