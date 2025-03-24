@@ -26,6 +26,15 @@ function toSortStr(sortAsc: boolean) {
 }
 
 
+function createDateRangeQueryParam() {
+    return query("dateMin", "dateMax").optional().isDate().toDate();
+}
+interface DateRangeQueryParams {
+    dateMin?: Date;
+    dateMax?: Date;
+}
+
+
 async function getUserFromRequest<Params, ResBody, ReqBody, QueryParams>(req: Request<Params, ResBody, ReqBody, QueryParams>) {
     const uploadingUser = await getSessionById(getSessionIdFromCookie(req));
     if (uploadingUser === null)
@@ -39,17 +48,26 @@ async function getManyIncidents(arg: {
     paginationOptions: FindManyOptions;
     search?: string;
     includeArchived?: boolean;
+    dateMin?: Date;
+    dateMax?: Date;
     sortBy?: SortBy;
     sortAsc?: boolean;
 }) {
     const parsedSortAsc = arg.sortAsc === undefined ? false : arg.sortAsc;
+
+    const timeRange = { gte: arg.dateMin, lte: arg.dateMax };
 
     return await prismaClient.incident.findMany({
         ...arg.paginationOptions,
 
         where: {
             name: arg.search ? searchAlg(arg.search) : undefined,
-            archived: arg.includeArchived === true ? undefined : false
+            archived: arg.includeArchived === true ? undefined : false,
+            OR: arg.dateMin !== undefined || arg.dateMax !== undefined ? [
+                { reportTime: timeRange },
+                { responseTime: timeRange },
+                { fireOutTime: timeRange }
+            ] : undefined
         },
         include: incidentInclude,
         orderBy: arg.sortBy === undefined ? incidentOrderBy : (
@@ -70,11 +88,13 @@ async function getManyIncidents(arg: {
 
 type IncidentQueryParams = SearchNameQueryParam &
     PageQueryParams &
-    IncludeArchivedQueryParams & SortByQueryParams;
+    IncludeArchivedQueryParams & DateRangeQueryParams &
+    SortByQueryParams;
 const incidentQueryParams = [
     createSearchNameQueryParam(),
     createPageQueryParams(),
-    createIncludeArchivedQueryParam(), createSortByQueryParam(), createSortAscQueryParam()
+    createIncludeArchivedQueryParam(), createDateRangeQueryParam(),
+    createSortByQueryParam(), createSortAscQueryParam()
 ];
 
 
