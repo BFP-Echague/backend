@@ -227,3 +227,27 @@ export function generalDelete<
         new SuccessResponse(result).sendResponse(res);
     };
 }
+
+
+
+export interface FindManyOptions {
+    cursor?: { id: number};
+    skip: number;
+    take: number;
+}
+
+export function paginate(pageSize: number | undefined, cursorId: number | undefined) {
+    const take = pageSize ?? 10;
+
+    return {
+        getPageInfo: (result: { id: number }[]) => ({
+            cursorNext: result.length === take ? result[result.length - 1].id : null
+        }),
+
+        findManyOptions: {
+            cursor: cursorId ? { id: cursorId } : undefined,
+            skip: cursorId ? 1 : 0,
+            take: take,
+        } as FindManyOptions
+    };
+}

@@ -2,7 +2,7 @@ import { ErrorResponse, prismaClient } from "@src/global/apps";
 import * as base from "./base";
 import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
-import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams, createIncludeArchivedQueryParam, IncludeArchivedQueryParams } from "./base";
+import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams, PageQueryParams, createIncludeArchivedQueryParam, IncludeArchivedQueryParams, FindManyOptions } from "./base";
 import { query } from "express-validator";
 import { getSessionById, getSessionIdFromCookie } from "@src/middlewares";
 import { Request } from "express";
@@ -15,8 +15,9 @@ function createSortByQueryParam() {
 function createSortAscQueryParam() {
     return query("sortAsc").optional().isBoolean().toBoolean();
 }
+type SortBy = "name" | "reportTime" | "barangay" | "responseTime" | "fireOutTime" | "notes" | "category" | "archived" | "createdBy" | "updatedBy";
 interface SortByQueryParams {
-    sortBy?: "name" | "reportTime" | "barangay" | "responseTime" | "fireOutTime" | "notes" | "category" | "archived" | "createdBy" | "updatedBy";
+    sortBy?: SortBy;
     sortAsc?: boolean;
 }
 
@@ -33,16 +34,53 @@ async function getUserFromRequest<Params, ResBody, ReqBody, QueryParams>(req: Re
 }
 
 
-export const incidentControllerList: base.ControllerList<
-    SearchNameQueryParam &
+
+async function getManyIncidents(arg: {
+    paginationOptions: FindManyOptions;
+    search?: string;
+    includeArchived?: boolean;
+    sortBy?: SortBy;
+    sortAsc?: boolean;
+}) {
+    const parsedSortAsc = arg.sortAsc === undefined ? false : arg.sortAsc;
+
+    return await prismaClient.incident.findMany({
+        ...arg.paginationOptions,
+
+        where: {
+            name: arg.search ? searchAlg(arg.search) : undefined,
+            archived: arg.includeArchived === true ? undefined : false
+        },
+        include: incidentInclude,
+        orderBy: arg.sortBy === undefined ? incidentOrderBy : (
+            arg.sortBy === "archived" ? { archived: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "name" ? { name: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "reportTime" ? { reportTime: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "responseTime" ? { responseTime: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "fireOutTime" ? { fireOutTime: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "barangay" ? { barangay: { name: toSortStr(parsedSortAsc) } }
+            : arg.sortBy === "category" ? { category: { severity: toSortStr(parsedSortAsc) } }
+            : arg.sortBy === "notes" ? { notes: toSortStr(parsedSortAsc) }
+            : arg.sortBy === "createdBy" ? { createdBy: { username: toSortStr(parsedSortAsc) } }
+            : arg.sortBy === "updatedBy" ? { updatedBy: { username: toSortStr(parsedSortAsc) } }
+            : undefined
+        ),
+    });
+}
+
+type IncidentQueryParams = SearchNameQueryParam &
     PageQueryParams &
-    IncludeArchivedQueryParams & SortByQueryParams
-> = {
-    queryParams: [
-        createSearchNameQueryParam(),
-        createPageQueryParams(),
-        createIncludeArchivedQueryParam(), createSortByQueryParam(), createSortAscQueryParam()
-    ],
+    IncludeArchivedQueryParams & SortByQueryParams;
+const incidentQueryParams = [
+    createSearchNameQueryParam(),
+    createPageQueryParams(),
+    createIncludeArchivedQueryParam(), createSortByQueryParam(), createSortAscQueryParam()
+];
+
+
+
+export const incidentControllerList: base.ControllerList<IncidentQueryParams> = {
+    queryParams: incidentQueryParams,
 
 
 
@@ -55,41 +93,19 @@ export const incidentControllerList: base.ControllerList<
 
     getMany: base.generalGetMany(
         async (req, validatedQuery) => {
-            const take = validatedQuery.pageSize ?? 10;
+            const pagination = base.paginate(validatedQuery.pageSize, validatedQuery.cursorId);
 
-
-            const sortAsc = validatedQuery.sortAsc === undefined ? false : validatedQuery.sortAsc;
-
-            const result = await prismaClient.incident.findMany({
-                cursor: validatedQuery.cursorId ? { id: validatedQuery.cursorId } : undefined,
-                skip: validatedQuery.cursorId ? 1 : 0,
-                take: take,
-
-                where: {
-                    name: validatedQuery.search ? searchAlg(validatedQuery.search) : undefined,
-                    archived: validatedQuery.includeArchived === true ? undefined : false
-                },
-                include: incidentInclude,
-                orderBy: validatedQuery.sortBy === undefined ? incidentOrderBy : (
-                    validatedQuery.sortBy === "archived" ? { archived: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "name" ? { name: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "reportTime" ? { reportTime: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "responseTime" ? { responseTime: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "fireOutTime" ? { fireOutTime: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "barangay" ? { barangay: { name: toSortStr(sortAsc) } }
-                    : validatedQuery.sortBy === "category" ? { category: { severity: toSortStr(sortAsc) } }
-                    : validatedQuery.sortBy === "notes" ? { notes: toSortStr(sortAsc) }
-                    : validatedQuery.sortBy === "createdBy" ? { createdBy: { username: toSortStr(sortAsc) } }
-                    : validatedQuery.sortBy === "updatedBy" ? { updatedBy: { username: toSortStr(sortAsc) } }
-                    : undefined
-                ),
+            const result = await getManyIncidents({
+                paginationOptions: pagination.findManyOptions,
+                search: validatedQuery.search,
+                includeArchived: validatedQuery.includeArchived,
+                sortBy: validatedQuery.sortBy,
+                sortAsc: validatedQuery.sortAsc
             });
 
             return {
                 data: result,
-                pageInfo: {
-                    cursorNext: result.length === take ? result[result.length - 1].id : null
-                }
+                pageInfo: pagination.getPageInfo(result)
             };
         },
 
