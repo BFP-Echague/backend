@@ -27,7 +27,7 @@ function toSortStr(sortAsc: boolean) {
 
 
 function createDateRangeQueryParam() {
-    return query("dateMin", "dateMax").optional().isDate().toDate();
+    return query("dateMin", "dateMax").optional().isISO8601().toDate();
 }
 interface DateRangeQueryParams {
     dateMin?: Date;
@@ -119,6 +119,8 @@ export const incidentControllerList: base.ControllerList<IncidentQueryParams> = 
                 paginationOptions: pagination.findManyOptions,
                 search: validatedQuery.search,
                 includeArchived: validatedQuery.includeArchived,
+                dateMin: validatedQuery.dateMin,
+                dateMax: validatedQuery.dateMax,
                 sortBy: validatedQuery.sortBy,
                 sortAsc: validatedQuery.sortAsc
             });
