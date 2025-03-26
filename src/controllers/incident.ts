@@ -26,12 +26,26 @@ function toSortStr(sortAsc: boolean) {
 }
 
 
-function createDateRangeQueryParam() {
+function createDateRangeQueryParams() {
     return query("dateMin", "dateMax").optional().isISO8601().toDate();
 }
 interface DateRangeQueryParams {
     dateMin?: Date;
     dateMax?: Date;
+}
+
+function createCategoryQueryParam() {
+    return query("categoryId").optional().isInt().toInt();
+}
+interface CategoryQueryParams {
+    categoryId?: number;
+}
+
+function createBarangayQueryParam() {
+    return query("barangayId").optional().isInt().toInt();
+}
+interface BarangayQueryParams {
+    barangayId?: number;
 }
 
 
@@ -50,6 +64,8 @@ async function getManyIncidents(arg: {
     includeArchived?: boolean;
     dateMin?: Date;
     dateMax?: Date;
+    categoryId?: number;
+    barangayId?: number;
     sortBy?: SortBy;
     sortAsc?: boolean;
 }) {
@@ -63,6 +79,8 @@ async function getManyIncidents(arg: {
         where: {
             name: arg.search ? searchAlg(arg.search) : undefined,
             archived: arg.includeArchived === true ? undefined : false,
+            categoryId: arg.categoryId,
+            barangayId: arg.barangayId,
             OR: arg.dateMin !== undefined || arg.dateMax !== undefined ? [
                 { reportTime: timeRange },
                 { responseTime: timeRange },
@@ -86,21 +104,21 @@ async function getManyIncidents(arg: {
     });
 }
 
-type IncidentQueryParams = SearchNameQueryParam &
+
+export const incidentControllerList: base.ControllerList<
+    SearchNameQueryParam &
     PageQueryParams &
     IncludeArchivedQueryParams & DateRangeQueryParams &
-    SortByQueryParams;
-const incidentQueryParams = [
-    createSearchNameQueryParam(),
-    createPageQueryParams(),
-    createIncludeArchivedQueryParam(), createDateRangeQueryParam(),
-    createSortByQueryParam(), createSortAscQueryParam()
-];
-
-
-
-export const incidentControllerList: base.ControllerList<IncidentQueryParams> = {
-    queryParams: incidentQueryParams,
+    CategoryQueryParams & BarangayQueryParams &
+    SortByQueryParams
+> = {
+    queryParams: [
+        createSearchNameQueryParam(),
+        createPageQueryParams(),
+        createIncludeArchivedQueryParam(), createDateRangeQueryParams(),
+        createCategoryQueryParam(), createBarangayQueryParam(),
+        createSortByQueryParam(), createSortAscQueryParam()
+    ],
 
 
 
@@ -121,6 +139,8 @@ export const incidentControllerList: base.ControllerList<IncidentQueryParams> = 
                 includeArchived: validatedQuery.includeArchived,
                 dateMin: validatedQuery.dateMin,
                 dateMax: validatedQuery.dateMax,
+                categoryId: validatedQuery.categoryId,
+                barangayId: validatedQuery.barangayId,
                 sortBy: validatedQuery.sortBy,
                 sortAsc: validatedQuery.sortAsc
             });
