@@ -17,7 +17,12 @@ export function getRateLimitArgs(data: OmitOptions): Partial<Options> {
             ).getResponse(),
             statusCode: StatusCodes.TOO_MANY_REQUESTS,
             legacyHeaders: false,
-            standardHeaders: true
+            standardHeaders: true,
+
+            handler: (req, res) => {
+                res.setHeader("Access-Control-Expose-Headers", "Retry-After");
+                res.status(StatusCodes.TOO_MANY_REQUESTS).send();
+            }
         } as Partial<Options>
     );
 }
