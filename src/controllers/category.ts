@@ -1,4 +1,4 @@
-import { prismaClient } from "@src/global/apps";
+import { logger, prismaClient } from "@src/global/apps";
 import * as base from "./base";
 import { searchAlg, categoryInclude, categoryOrderBy } from "@dbm";
 import { CategoryUpsertUtils } from "@src/upsert";
@@ -49,3 +49,34 @@ export const categoryControllerList: base.ControllerList<SearchNameQueryParam> =
         })
     )
 };
+
+
+
+export async function ensureCategory() {
+    const categoryCount = await prismaClient.category.count();
+    if (categoryCount !== 0) return;
+
+    logger?.error("No categories found. Populating categories ...");
+
+    await prismaClient.category.createMany({
+        data: [
+            {
+                name: "Low",
+                severity: 0
+            },
+            {
+                name: "Moderate",
+                severity: 1
+            },
+            {
+                name: "High",
+                severity: 2
+            },
+            {
+                name: "Severe",
+                severity: 3
+            },
+        ]
+    });
+    logger?.warn(`Added categories.`);
+}

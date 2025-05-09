@@ -1,4 +1,4 @@
-import { ErrorResponse, prismaClient } from "@src/global/apps";
+import { env, ErrorResponse, logger, prismaClient } from "@src/global/apps";
 import * as base from "./base";
 import { searchAlg, incidentInclude, incidentOrderBy } from "@dbm";
 import { IncidentUpsertUtils } from "@src/upsert";
@@ -6,6 +6,8 @@ import { createSearchNameQueryParam, SearchNameQueryParam, createPageQueryParams
 import { query } from "express-validator";
 import { getSessionById, getSessionIdFromCookie } from "@src/middlewares";
 import { Request } from "express";
+import { Prisma } from "@prisma/client";
+import _ from "underscore";
 
 
 
@@ -193,3 +195,149 @@ export const incidentControllerList: base.ControllerList<
         );
     }
 };
+
+
+export async function populateRandomIncidents() {
+    if (!env.DEVELOPMENT_MODE) return;
+
+    const incidentCount = await prismaClient.incident.count();
+    if (incidentCount !== 0) return;
+
+    logger?.error("USING DEVELOPMENT MODE, populating empty incidents..");
+
+    const barangays = await prismaClient.barangay.findMany();
+    const possibleCauses = [
+        "Arson",
+        "Electrical malfunction",
+        "Unattended cooking",
+        "Cigarette left burning",
+        "Overloaded electrical circuit",
+        "Heater left too close to flammable material",
+        "Lightning strike",
+        "Spontaneous combustion",
+        "Combustible materials near heat source",
+        "Improper disposal of ashes",
+        "Children playing with fire",
+        "Candle left unattended",
+        "Gas leak ignition",
+        "Chimney fire",
+        "Vehicle accident",
+        "Industrial equipment failure",
+        "Flammable liquid spill",
+        "Fireworks misuse",
+        "Barbecue grill malfunction",
+        "Clothes dryer lint build-up",
+        "Malfunctioning battery",
+        "Chemical reaction",
+        "Sunlight magnified through glass",
+        "Space heater tipped over",
+        "Improper welding or cutting",
+        "Portable generator mishap",
+        "Uncontrolled burn or bonfire",
+        "Improperly stored chemicals",
+        "Sparks from power tools",
+        "Electrical arcing",
+        "Overheated appliance",
+        "Negligence with incense",
+        "Electrical storm surge",
+        "Careless smoking in bed",
+        "Wood stove misuse"
+    ];
+    const possibleStructures = [
+        "Single-family home",
+        "Apartment building",
+        "High-rise residential building",
+        "Mobile home",
+        "Garage",
+        "Barn",
+        "Warehouse",
+        "Factory",
+        "Retail store",
+        "Supermarket",
+        "Restaurant",
+        "Hotel",
+        "Hospital",
+        "School",
+        "University building",
+        "Church",
+        "Mosque",
+        "Temple",
+        "Office building",
+        "Bank",
+        "Fire station",
+        "Police station",
+        "Library",
+        "Theater",
+        "Gas station",
+        "Power plant",
+        "Parking garage",
+        "Airport terminal",
+        "Train station",
+        "Subway station",
+        "Stadium",
+        "Convention center",
+        "Greenhouse",
+        "Construction site",
+        "Boathouse"
+    ];
+    const users = await prismaClient.user.findMany();
+    const categories = await prismaClient.category.findMany();
+
+    const startTime = new Date("2024-12-25");
+    const endTime = new Date("2025-08-25");
+    function randomDate() {
+        return new Date(startTime.getTime() + Math.random() * (endTime.getTime() - startTime.getTime()));
+    }
+
+
+    const locationLatStart = 16.631909898187242;
+    const locationLongStart = 121.66548029513474;
+    const locationLatEnd = 16.689797981187866;
+    const locationLongEnd = 121.78152337708087;
+
+
+    function randomItem<T>(array: T[]) {
+        return array[_.random(array.length - 1)];
+    }
+
+    const incidents: Prisma.IncidentCreateInput[] = [];
+
+    for (let i = 0; i < 30; i++) {
+        incidents.push({
+            archived: Math.random() < 0.2,
+            name: `Incident ${i}`,
+            reportTime: randomDate(),
+            location: { create: {
+                latitude: Math.random() * (locationLatEnd - locationLatStart) + locationLatStart,
+                longitude: Math.random() * (locationLongEnd - locationLongStart) + locationLongStart,
+            } },
+            barangay: { connect: { id: randomItem(barangays).id } },
+            causes: (() => {
+                const amount = _.random(10);
+                const causes = [];
+                for (let i = 0; i < amount; i++) causes.push(randomItem(possibleCauses));
+                return causes;
+            })(),
+            responseTime: randomDate(),
+            fireOutTime: randomDate(),
+            structuresInvolved: (() => {
+                const amount = _.random(10);
+                const structures = [];
+                for (let i = 0; i < amount; i++) structures.push(randomItem(possibleStructures));
+                return structures;
+            })(),
+            notes: "Automatically generated as test.",
+            category: { connect: { id: randomItem(categories).id } },
+            createdBy: { connect: { id: randomItem(users).id } },
+            updatedBy: { connect: { id: randomItem(users).id } },
+        });
+    }
+
+    await prismaClient.$transaction(
+        incidents.map(incident => prismaClient.incident.create({
+            data: incident
+        })
+    ));
+    
+    logger?.warn("Populated incidents.");
+}

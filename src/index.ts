@@ -7,7 +7,7 @@ import {
 
 import "./routes";
 import expressListRoutes from "express-list-routes";
-import { ensureAdmin } from "./controllers";
+import { ensureAdmin, ensureBarangays, ensureCategory, populateRandomIncidents } from "./controllers";
 
 
 async function main() {
@@ -21,8 +21,11 @@ async function main() {
     expressClient.listen(
         env.PORT,
         env.HOST,
-        () => {
-            ensureAdmin();
+        async () => {
+            await ensureAdmin();
+            await ensureBarangays();
+            await ensureCategory();
+            await populateRandomIncidents();
             console.log(`Server now listening on ${url}.`);
         }
     );
